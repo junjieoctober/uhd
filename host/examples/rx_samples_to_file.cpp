@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+
 #include <uhd/types/tune_request.hpp>
 #include <uhd/utils/thread_priority.hpp>
 #include <uhd/utils/safe_main.hpp>
@@ -272,6 +273,7 @@ int UHD_SAFE_MAIN(int argc, char *argv[]){
     //Lock mboard clocks
     usrp->set_clock_source(ref);
 
+
     //always select the subdevice first, the channel mapping affects the other settings
     if (vm.count("subdev")) usrp->set_rx_subdev_spec(subdev);
 
@@ -289,14 +291,15 @@ int UHD_SAFE_MAIN(int argc, char *argv[]){
     //set the center frequency
     if (vm.count("freq")) { //with default of 0.0 this will always be true
         std::cout << boost::format("Setting RX Freq: %f MHz...") % (freq/1e6) << std::endl;
-        uhd::tune_request_t tune_request(freq);
+        uhd::tune_request_t tune_request(freq,100e3);
         if(vm.count("int-n")) tune_request.args = uhd::device_addr_t("mode_n=integer");
         usrp->set_rx_freq(tune_request);
         std::cout << boost::format("Actual RX Freq: %f MHz...") % (usrp->get_rx_freq()/1e6) << std::endl << std::endl;
     }
 
     //set the rf gain
-    if (vm.count("gain")) {
+    if (vm.count("gain")) 
+	{
         std::cout << boost::format("Setting RX Gain: %f dB...") % gain << std::endl;
         usrp->set_rx_gain(gain);
         std::cout << boost::format("Actual RX Gain: %f dB...") % usrp->get_rx_gain() << std::endl << std::endl;
@@ -315,7 +318,8 @@ int UHD_SAFE_MAIN(int argc, char *argv[]){
     boost::this_thread::sleep(boost::posix_time::seconds(setup_time)); //allow for some setup time
 
     //check Ref and LO Lock detect
-    if (not vm.count("skip-lo")){
+    if (not vm.count("skip-lo"))
+	{
         check_locked_sensor(usrp->get_rx_sensor_names(0), "lo_locked", boost::bind(&uhd::usrp::multi_usrp::get_rx_sensor, usrp, _1, 0), setup_time);
         if (ref == "mimo")
             check_locked_sensor(usrp->get_mboard_sensor_names(0), "mimo_locked", boost::bind(&uhd::usrp::multi_usrp::get_mboard_sensor, usrp, _1, 0), setup_time);
@@ -323,7 +327,8 @@ int UHD_SAFE_MAIN(int argc, char *argv[]){
             check_locked_sensor(usrp->get_mboard_sensor_names(0), "ref_locked", boost::bind(&uhd::usrp::multi_usrp::get_mboard_sensor, usrp, _1, 0), setup_time);
     }
 
-    if (total_num_samps == 0){
+    if (total_num_samps == 0)
+	{
         std::signal(SIGINT, &sig_int_handler);
         std::cout << "Press Ctrl + C to stop streaming..." << std::endl;
     }
